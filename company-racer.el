@@ -71,23 +71,23 @@
 (defcustom company-racer-executable "racer"
   "Path to the racer binary."
   :type 'file
-  :group 'company)
+  :group 'company-racer)
 
 (defcustom company-racer-rust-src (or (getenv "RUST_SRC_PATH")
                                       "/usr/local/src/rust/src")
   "Path to rust lang sources, needs to be an absolute path."
   :type 'directory
-  :group 'company)
+  :group 'company-racer)
 
 (defcustom company-racer-skip-comment-completion t
   "Skip completion prompt when the point is at a comment."
   :type 'boolean
-  :group 'company)
+  :group 'company-racer)
 
 (defcustom company-racer-skip-string-completion t
   "Skip completion prompt when the point is at a string."
   :type 'boolean
-  :group 'company)
+  :group 'company-racer)
 
 ;; TODO: is there a better way to do this?
 (defconst company-racer-temp-file (make-temp-file "company-racer"))
