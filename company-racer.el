@@ -73,9 +73,10 @@
   :type 'file
   :group 'company-racer)
 
-(defcustom company-racer-rust-src (or (getenv "RUST_SRC_PATH")
-                                      "/usr/local/src/rust/src")
-  "Path to rust lang sources, needs to be an absolute path."
+(defcustom company-racer-rust-src (getenv "RUST_SRC_PATH")
+  "Path to rust lang sources, needs to be an absolute path.
+
+If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
   :type 'directory
   :group 'company-racer)
 
@@ -122,16 +123,19 @@
                                                               (cdr bounds))))
              thing)))))
 
-;; TODO: use "prefix" to handle fully qualified names
 (defun company-racer-complete-at-point (prefix)
   "Call racer complete for PREFIX, return a deferred object."
-  (if (company-racer-namespace-p prefix)
-      (deferred:process company-racer-executable "complete" prefix)
-    (let ((line         (number-to-string (count-lines (point-min) (min (1+ (point)) (point-max)))))
-          (column       (number-to-string (- (point) (line-beginning-position))))
-          (source-path  company-racer-temp-file))
-      (write-region nil nil company-racer-temp-file nil 0)
-      (deferred:process company-racer-executable "complete" line column source-path))))
+  (let ((process-environment (if company-racer-rust-src
+                                 (append (list
+                                          (format "RUST_SRC_PATH=%s" (expand-file-name company-racer-rust-src)))
+                                         process-environment)
+                               process-environment)))
+    (if (company-racer-namespace-p prefix)
+        (deferred:process company-racer-executable "complete" prefix)
+      (let ((line         (number-to-string (count-lines (point-min) (min (1+ (point)) (point-max)))))
+            (column       (number-to-string (- (point) (line-beginning-position)))))
+        (write-region nil nil company-racer-temp-file nil 0)
+        (deferred:process company-racer-executable "complete" line column company-racer-temp-file)))))
 
 ;; TODO: Use the rest of information
 (defun company-racer-parse-candidate (line)
