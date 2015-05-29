@@ -6,7 +6,7 @@
 ;; URL: https://github.com/emacs-pe/company-racer
 ;; Keywords: convenience
 ;; Version: 0.1
-;; Package-Requires: ((emacs "24") (cl-lib "0.5") (company "0.8.0") (concurrent "0.3.1") (rust-mode "0.2.0"))
+;; Package-Requires: ((emacs "24") (cl-lib "0.5") (company "0.8.0") (deferred "0.3.1") (rust-mode "0.2.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -61,7 +61,7 @@
 
 (require 'company)
 (require 'thingatpt)
-(require 'concurrent)
+(require 'deferred)
 (require 'rust-mode)
 
 (defgroup company-racer nil
