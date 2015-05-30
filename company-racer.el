@@ -163,7 +163,8 @@ If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
   (interactive (list 'interactive))
   (cl-case command
     (interactive (company-begin-backend 'company-racer))
-    (prefix (company-racer-prefix))
+    (prefix (and (derived-mode-p 'rust-mode)
+                 (company-racer-prefix)))
     (candidates (cons :async
                       (lambda (cb) (company-racer-candidates arg cb))))
     (meta nil)
