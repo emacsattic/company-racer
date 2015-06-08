@@ -91,16 +91,12 @@ If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
   :group 'company-racer)
 
 ;; TODO: is there a better way to do this?
-(defconst company-racer-temp-file (make-temp-file "company-racer"))
+(defvar company-racer-temp-file nil)
 
 (defvar company-racer-syntax-table
   (let ((table (make-syntax-table rust-mode-syntax-table)))
     (modify-syntax-entry ?: "_" table)
     table))
-
-(defun company-racer-namespace-p (string)
-  "Check if STRING match to a rust namespace."
-  (string-match-p ":+" string))
 
 (defun company-racer-prefix ()
   "Get a prefix from current position."
@@ -123,51 +119,64 @@ If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
                                                               (cdr bounds))))
              thing)))))
 
-(defun company-racer-complete-at-point (prefix)
+(defun company-racer-complete-at-point ()
   "Call racer complete for PREFIX, return a deferred object."
   (let ((process-environment (if company-racer-rust-src
                                  (append (list
                                           (format "RUST_SRC_PATH=%s" (expand-file-name company-racer-rust-src)))
                                          process-environment)
                                process-environment)))
-    (if (company-racer-namespace-p prefix)
-        (deferred:process company-racer-executable "complete" prefix)
-      (let ((line         (number-to-string (count-lines (point-min) (min (1+ (point)) (point-max)))))
-            (column       (number-to-string (- (point) (line-beginning-position)))))
-        (write-region nil nil company-racer-temp-file nil 0)
-        (deferred:process company-racer-executable "complete" line column company-racer-temp-file)))))
+    (let ((line (number-to-string (count-lines (point-min) (min (1+ (point)) (point-max)))))
+          (column (number-to-string (- (point) (line-beginning-position)))))
+      (write-region nil nil company-racer-temp-file nil 0)
+      (deferred:process company-racer-executable "complete" line column company-racer-temp-file))))
 
 ;; TODO: Use the rest of information
-(defun company-racer-parse-candidate (line)
-  "Return a completion candidate from a racer output LINE."
-  (when (string-match "^MATCH \\([^,]+\\),\\([^,]+\\),\\([^,]+\\),\\([^,]+\\),\\([^,]+\\),\\(.+\\)$" line)
-    (match-string 1 line)))
+(defun company-racer-parse-candidate (prefix line)
+  "Return a completion candidate for PREFIX and LINE."
+  (let* ((match (and (string-prefix-p "MATCH" line) (cadr (split-string line " "))))
+         (values (and match (split-string match ","))))
+    (and values
+         (cl-multiple-value-bind (matchstr _ _ _ matchtype contextstr) values
+           ;; FIXME: Add the prefix because currently racer doesn't
+           ;;        add the prefix when completing modules, and fails
+           ;;        when there are characters after "::"
+           (and (string-match-p "::" prefix)
+                (setq matchstr (concat prefix matchstr)))
+           (put-text-property 0 1 :matchtype matchtype matchstr)
+           (put-text-property 0 1 :contextstr contextstr matchstr)
+           matchstr))))
 
 (defun company-racer-candidates (prefix callback)
   "Return candidates for PREFIX with CALLBACK."
   (deferred:nextc
-    (company-racer-complete-at-point prefix)
+    (company-racer-complete-at-point)
     (lambda (output)
       (let ((candidates (cl-loop for line in (split-string output "\n")
-                                 for candidate = (company-racer-parse-candidate line)
+                                 for candidate = (company-racer-parse-candidate prefix line)
                                  unless (null candidate)
-                                 collect (if (company-racer-namespace-p prefix)
-                                             (concat prefix candidate)
-                                           candidate))))
+                                 collect candidate)))
         (and candidates
              (funcall callback candidates))))))
 
+(defun company-racer-meta (candidate)
+  "Show type info for a CANDIDATE."
+  (get-text-property 0 :matchtype candidate))
+
 ;;;###autoload
 (defun company-racer (command &optional arg &rest ignored)
-  "`company-mode' completion back-end for racer."
+  "`company-mode' completion back-end for racer.
+Provide completion info according to COMMAND and ARG.  IGNORED, not used."
   (interactive (list 'interactive))
   (cl-case command
+    (init (and (null company-racer-temp-file)
+               (setq company-racer-temp-file (make-temp-file "company-racer"))))
     (interactive (company-begin-backend 'company-racer))
     (prefix (and (derived-mode-p 'rust-mode)
                  (company-racer-prefix)))
     (candidates (cons :async
                       (lambda (cb) (company-racer-candidates arg cb))))
-    (meta nil)
+    (meta (company-racer-meta arg))
     (doc-buffer nil)
     (duplicates t)
     (location nil)))
