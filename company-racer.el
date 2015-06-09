@@ -100,24 +100,7 @@ If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
 
 (defun company-racer-prefix ()
   "Get a prefix from current position."
-  (ignore-errors
-    (with-syntax-table company-racer-syntax-table
-      (and (eq major-mode 'rust-mode)
-           (let ((face (get-text-property (point) 'face))
-                 (bounds (or (bounds-of-thing-at-point 'symbol)
-                             (and (eq (char-before) ?.)
-                                  (cons (1- (point)) (point)))))
-                 (thing 'stop))
-             (and bounds
-                  (if (and (eq face 'font-lock-comment-face)
-                           company-racer-skip-comment-completion)
-                      nil t)
-                  (if (and (eq face 'font-lock-string-face)
-                           company-racer-skip-string-completion)
-                      nil t)
-                  (setq thing (buffer-substring-no-properties (car bounds)
-                                                              (cdr bounds))))
-             thing)))))
+  (company-grab-symbol-cons "\\.\\|::" 2))
 
 (defun company-racer-complete-at-point ()
   "Call racer complete for PREFIX, return a deferred object."
@@ -172,8 +155,11 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
     (init (and (null company-racer-temp-file)
                (setq company-racer-temp-file (make-temp-file "company-racer"))))
     (interactive (company-begin-backend 'company-racer))
-    (prefix (and (derived-mode-p 'rust-mode)
-                 (company-racer-prefix)))
+    (prefix (and (eq major-mode 'rust-mode)
+                 buffer-file-name
+                 company-racer-executable
+                 (not (company-in-string-or-comment))
+                 (or (company-racer-prefix) 'stop)))
     (candidates (cons :async
                       (lambda (cb) (company-racer-candidates arg cb))))
     (meta (company-racer-meta arg))
