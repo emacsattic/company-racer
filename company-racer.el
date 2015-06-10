@@ -6,7 +6,7 @@
 ;; URL: https://github.com/emacs-pe/company-racer
 ;; Keywords: convenience
 ;; Version: 0.1
-;; Package-Requires: ((emacs "24") (cl-lib "0.5") (company "0.8.0") (deferred "0.3.1") (rust-mode "0.2.0"))
+;; Package-Requires: ((emacs "24") (cl-lib "0.5") (company "0.8.0") (deferred "0.3.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -62,7 +62,6 @@
 (require 'company)
 (require 'thingatpt)
 (require 'deferred)
-(require 'rust-mode)
 
 (defgroup company-racer nil
   "Company integration for rust-mode"
@@ -80,23 +79,8 @@ If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
   :type 'directory
   :group 'company-racer)
 
-(defcustom company-racer-skip-comment-completion t
-  "Skip completion prompt when the point is at a comment."
-  :type 'boolean
-  :group 'company-racer)
-
-(defcustom company-racer-skip-string-completion t
-  "Skip completion prompt when the point is at a string."
-  :type 'boolean
-  :group 'company-racer)
-
 ;; TODO: is there a better way to do this?
 (defvar company-racer-temp-file nil)
-
-(defvar company-racer-syntax-table
-  (let ((table (make-syntax-table rust-mode-syntax-table)))
-    (modify-syntax-entry ?: "_" table)
-    table))
 
 (defun company-racer-prefix ()
   "Get a prefix from current position."
@@ -155,9 +139,7 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
     (init (and (null company-racer-temp-file)
                (setq company-racer-temp-file (make-temp-file "company-racer"))))
     (interactive (company-begin-backend 'company-racer))
-    (prefix (and (eq major-mode 'rust-mode)
-                 buffer-file-name
-                 company-racer-executable
+    (prefix (and (derived-mode-p 'rust-mode)
                  (not (company-in-string-or-comment))
                  (or (company-racer-prefix) 'stop)))
     (candidates (cons :async
