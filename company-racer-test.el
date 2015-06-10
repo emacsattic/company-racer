@@ -38,14 +38,14 @@
   (undercover "company-racer.el"))
 
 (defvar company-racer-candidates-cases
-  '((nil "" "")
-    (nil "anything" "PREFIX 0,0,")
-    ("SpannedIdent" "Span" "MATCH SpannedIdent,2,9,src.rs,Type,type SpannedIdent = Spanned<Ident>")
-    ("std::collections" "std::" "MATCH collections,1,0,/src/rust/src/libstd/collections/mod.rs,Module,/src/rust/src/libstd/collections/mod.rs")))
+  '((nil "")
+    (nil "PREFIX 0,0,")
+    ("SpannedIdent" "MATCH SpannedIdent,2,9,src.rs,Type,type SpannedIdent = Spanned<Ident>")
+    ("collections" "MATCH collections,1,0,/src/rust/src/libstd/collections/mod.rs,Module,/src/rust/src/libstd/collections/mod.rs")))
 
 (ert-deftest company-racer-candidates-test ()
-  (cl-loop for (candidate prefix line) in company-racer-candidates-cases
-           for result = (company-racer-parse-candidate prefix line)
+  (cl-loop for (candidate line) in company-racer-candidates-cases
+           for result = (company-racer-parse-candidate line)
            do (should (equal candidate result))))
 
 (provide 'company-racer-test)

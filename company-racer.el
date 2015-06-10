@@ -99,28 +99,23 @@ If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
       (deferred:process company-racer-executable "complete" line column company-racer-temp-file))))
 
 ;; TODO: Use the rest of information
-(defun company-racer-parse-candidate (prefix line)
-  "Return a completion candidate for PREFIX and LINE."
+(defun company-racer-parse-candidate (line)
+  "Return a completion candidate from a LINE."
   (let* ((match (and (string-prefix-p "MATCH" line) (cadr (split-string line " "))))
          (values (and match (split-string match ","))))
     (and values
          (cl-multiple-value-bind (matchstr _ _ _ matchtype contextstr) values
-           ;; FIXME: Add the prefix because currently racer doesn't
-           ;;        add the prefix when completing modules, and fails
-           ;;        when there are characters after "::"
-           (and (string-match-p "::" prefix)
-                (setq matchstr (concat prefix matchstr)))
            (put-text-property 0 1 :matchtype matchtype matchstr)
            (put-text-property 0 1 :contextstr contextstr matchstr)
            matchstr))))
 
-(defun company-racer-candidates (prefix callback)
+(defun company-racer-candidates (callback)
   "Return candidates for PREFIX with CALLBACK."
   (deferred:nextc
     (company-racer-complete-at-point)
     (lambda (output)
       (let ((candidates (cl-loop for line in (split-string output "\n")
-                                 for candidate = (company-racer-parse-candidate prefix line)
+                                 for candidate = (company-racer-parse-candidate line)
                                  unless (null candidate)
                                  collect candidate)))
         (and candidates
@@ -142,8 +137,7 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
     (prefix (and (derived-mode-p 'rust-mode)
                  (not (company-in-string-or-comment))
                  (or (company-racer-prefix) 'stop)))
-    (candidates (cons :async
-                      (lambda (cb) (company-racer-candidates arg cb))))
+    (candidates (cons :async 'company-racer-candidates))
     (meta (company-racer-meta arg))
     (doc-buffer nil)
     (duplicates t)
