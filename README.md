@@ -18,7 +18,7 @@ Install and configure [racer][]. And add to your `init.el`:
 
 Check https://github.com/company-mode/company-mode for details.
 
-### Troubleshoting
+### Troubleshooting
 
 + [racer][] requires to set the environment variable with
   `RUST_SRC_PATH` and needs to be an absolute path:

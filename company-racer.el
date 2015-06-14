@@ -41,7 +41,7 @@
 ;;
 ;; Check https://github.com/company-mode/company-mode for details.
 ;;
-;; Troubleshoting:
+;; Troubleshooting:
 ;;
 ;; + [racer][] requires to set the environment variable with
 ;;   `RUST_SRC_PATH' and needs to be an absolute path:
@@ -98,7 +98,6 @@ If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
       (write-region nil nil company-racer-temp-file nil 0)
       (deferred:process company-racer-executable "complete" line column company-racer-temp-file))))
 
-;; TODO: Use the rest of information
 (defun company-racer-parse-candidate (line)
   "Return a completion candidate from a LINE."
   (let* ((match (and (string-prefix-p "MATCH" line) (cadr (split-string line " "))))
@@ -118,11 +117,14 @@ If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
                                  for candidate = (company-racer-parse-candidate line)
                                  unless (null candidate)
                                  collect candidate)))
-        (and candidates
-             (funcall callback candidates))))))
+        (funcall callback candidates)))))
 
 (defun company-racer-meta (candidate)
-  "Show type info for a CANDIDATE."
+  "Return meta string for a CANDIDATE."
+  (get-text-property 0 :contextstr candidate))
+
+(defun company-racer-annotation (candidate)
+  "Return annotation string for a CANDIDATE."
   (get-text-property 0 :matchtype candidate))
 
 ;;;###autoload
@@ -138,6 +140,7 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
                  (not (company-in-string-or-comment))
                  (or (company-racer-prefix) 'stop)))
     (candidates (cons :async 'company-racer-candidates))
+    (annotation (company-racer-annotation arg))
     (meta (company-racer-meta arg))
     (doc-buffer nil)
     (duplicates t)
