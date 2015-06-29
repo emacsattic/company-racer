@@ -96,7 +96,7 @@ If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
     (let ((line (number-to-string (count-lines (point-min) (min (1+ (point)) (point-max)))))
           (column (number-to-string (- (point) (line-beginning-position)))))
       (write-region nil nil company-racer-temp-file nil 0)
-      (deferred:process company-racer-executable "complete" line column company-racer-temp-file))))
+      (deferred:process company-racer-executable "complete" line column buffer-file-name company-racer-temp-file))))
 
 (defun company-racer-parse-candidate (line)
   "Return a completion candidate from a LINE."
