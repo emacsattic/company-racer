@@ -3,13 +3,11 @@
 *Author:* Mario Rodas <marsam@users.noreply.github.com><br>
 *Version:* 0.1<br>
 
-[![Travis build status](https://travis-ci.org/emacs-pe/company-racer.svg?branch=master)](https://travis-ci.org/emacs-pe/company-racer)
-
 A company backend for [racer][].
 
 ## Setup
 
-Install and configure [racer][]. And add to your `init.el`:
+Install and configure [racer][].  And add to your `init.el`:
 
         (require 'company-racer)
 

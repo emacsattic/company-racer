@@ -6,7 +6,7 @@
 ;; URL: https://github.com/emacs-pe/company-racer
 ;; Keywords: convenience
 ;; Version: 0.1
-;; Package-Requires: ((emacs "24") (cl-lib "0.5") (company "0.8.0") (deferred "0.3.1"))
+;; Package-Requires: ((emacs "24") (cl-lib "0.5") (company "0.8.0") (deferred "0.3.1") (dash "2.12.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -26,13 +26,12 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; [![Travis build status](https://travis-ci.org/emacs-pe/company-racer.svg?branch=master)](https://travis-ci.org/emacs-pe/company-racer)
 
 ;; A company backend for [racer][].
 ;;
 ;; Setup:
 ;;
-;; Install and configure [racer][]. And add to your `init.el':
+;; Install and configure [racer][].  And add to your `init.el':
 ;;
 ;;     (require 'company-racer)
 ;;
@@ -93,18 +92,21 @@ If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
                                           (format "RUST_SRC_PATH=%s" (expand-file-name company-racer-rust-src)))
                                          process-environment)
                                process-environment)))
-    (let ((line (number-to-string (count-lines (point-min) (min (1+ (point)) (point-max)))))
-          (column (number-to-string (- (point) (line-beginning-position))))
-          (fname (or (buffer-file-name) "")))
+    (let ((line     (number-to-string (count-lines (point-min) (min (1+ (point)) (point-max)))))
+          (column   (number-to-string (- (point) (line-beginning-position))))
+          (filename (or (buffer-file-name) "")))
       (write-region nil nil company-racer-temp-file nil 0)
-      (deferred:process company-racer-executable "complete" line column fname company-racer-temp-file))))
+      (deferred:process company-racer-executable "complete" line column filename company-racer-temp-file))))
 
 (defun company-racer-parse-candidate (line)
   "Return a completion candidate from a LINE."
   (let* ((match (and (string-prefix-p "MATCH" line) (cadr (split-string line " "))))
          (values (and match (split-string match ","))))
     (and values
-         (cl-multiple-value-bind (matchstr _ _ _ matchtype contextstr) values
+         (cl-multiple-value-bind (matchstr line column filepath matchtype contextstr) values
+           (put-text-property 0 1 :line (string-to-number line) matchstr)
+           (put-text-property 0 1 :column (string-to-number column) matchstr)
+           (put-text-property 0 1 :filepath filepath matchstr)
            (put-text-property 0 1 :matchtype matchtype matchstr)
            (put-text-property 0 1 :contextstr contextstr matchstr)
            matchstr))))
@@ -125,8 +127,15 @@ If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
   (get-text-property 0 :contextstr candidate))
 
 (defun company-racer-annotation (candidate)
-  "Return annotation string for a CANDIDATE."
-  (get-text-property 0 :matchtype candidate))
+  "Return an annotation string for a CANDIDATE."
+  (let ((matchtype (get-text-property 0 :matchtype candidate))
+        (contextstr (get-text-property 0 :contextstr candidate)))
+    (format "%s : %s" contextstr matchtype)))
+
+(defun company-racer-location (candidate)
+  "Return location for a CANDIDATE."
+  (cons (get-text-property 0 :filepath candidate)
+        (get-text-property 0 :line candidate)))
 
 ;;;###autoload
 (defun company-racer (command &optional arg &rest ignored)
@@ -142,10 +151,8 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
                  (or (company-racer-prefix) 'stop)))
     (candidates (cons :async 'company-racer-candidates))
     (annotation (company-racer-annotation arg))
-    (meta (company-racer-meta arg))
-    (doc-buffer nil)
-    (duplicates t)
-    (location nil)))
+    (location (company-racer-location arg))
+    (meta (company-racer-meta arg))))
 
 (provide 'company-racer)
 
