@@ -3,6 +3,10 @@
 *Author:* Mario Rodas <marsam@users.noreply.github.com><br>
 *Version:* 0.1<br>
 
+> **NOTE**: [emacs-racer][] already offers completion support for through
+> `completion-at-point-functions`, so installing both packages could be
+> unnecessary.
+
 A company backend for [racer][].
 
 ## Setup
@@ -29,6 +33,7 @@ Check https://github.com/company-mode/company-mode for details.
 + [ ] Add support for find-definition (maybe not in this package.)
 
 [racer]: https://github.com/phildawes/racer
+[emacs-racer]: https://github.com/racer-rust/emacs-racer
 [rust-lang]: http://www.rust-lang.org/
 
 
