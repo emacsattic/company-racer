@@ -66,6 +66,7 @@
 (require 'company)
 (require 'thingatpt)
 (require 'deferred)
+(require 'format-spec)
 
 (defgroup company-racer nil
   "Company integration for rust-mode"
@@ -81,6 +82,14 @@
 
 If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
   :type 'directory
+  :group 'company-racer)
+
+(defcustom company-racer-annotation-format "%c : %m"
+  "String to format `company-racer' annotations.
+
+%c   context
+%m   matchstr"
+  :type 'string
   :group 'company-racer)
 
 ;; TODO: is there a better way to do this?
@@ -135,7 +144,8 @@ If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
   "Return an annotation string for a CANDIDATE."
   (let ((matchtype (get-text-property 0 :matchtype candidate))
         (contextstr (get-text-property 0 :contextstr candidate)))
-    (format "%s : %s" contextstr matchtype)))
+    (format-spec company-racer-annotation-format `((?m . ,matchtype)
+                                                   (?c . ,contextstr)))))
 
 (defun company-racer-location (candidate)
   "Return location for a CANDIDATE."
