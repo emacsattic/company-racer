@@ -114,7 +114,7 @@ If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
 
 (defun company-racer-parse-candidate (line)
   "Return a completion candidate from a LINE."
-  (let* ((match (and (string-prefix-p "MATCH" line) (cadr (split-string line " "))))
+  (let* ((match (and (string-prefix-p "MATCH" line) (string-join (cdr (split-string line " ")) " ")))
          (values (and match (split-string match ","))))
     (and values
          (cl-multiple-value-bind (matchstr line column filepath matchtype contextstr) values
