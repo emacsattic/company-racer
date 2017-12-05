@@ -6,7 +6,7 @@
 ;; URL: https://github.com/emacs-pe/company-racer
 ;; Keywords: convenience
 ;; Version: 0.1
-;; Package-Requires: ((emacs "24") (cl-lib "0.5") (company "0.8.0") (deferred "0.3.1") (dash "2.12.0"))
+;; Package-Requires: ((emacs "24.4") (cl-lib "0.5") (company "0.8.0") (deferred "0.3.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -61,7 +61,9 @@
 ;; [rust-lang]: http://www.rust-lang.org/
 
 ;;; Code:
-(eval-when-compile (require 'cl-lib))
+(eval-when-compile
+  (require 'cl-lib)
+  (require 'subr-x))
 
 (require 'company)
 (require 'thingatpt)
