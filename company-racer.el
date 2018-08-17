@@ -119,12 +119,12 @@ If non nil overwrites the value of the environment variable 'RUST_SRC_PATH'."
   (let* ((match (and (string-prefix-p "MATCH" line) (string-join (cdr (split-string line " ")) " ")))
          (values (and match (split-string match ","))))
     (and values
-         (cl-multiple-value-bind (matchstr line column filepath matchtype contextstr) values
+         (cl-multiple-value-bind (matchstr line column filepath matchtype) values
            (put-text-property 0 1 :line (string-to-number line) matchstr)
            (put-text-property 0 1 :column (string-to-number column) matchstr)
            (put-text-property 0 1 :filepath filepath matchstr)
            (put-text-property 0 1 :matchtype matchtype matchstr)
-           (put-text-property 0 1 :contextstr contextstr matchstr)
+           (put-text-property 0 1 :contextstr (string-join (cdr (cddddr values)) ",") matchstr)
            matchstr))))
 
 (defun company-racer-candidates (callback)
